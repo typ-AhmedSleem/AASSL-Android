@@ -1,4 +1,4 @@
-package com.typ.aassl
+package com.typ.aassl.ui
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
