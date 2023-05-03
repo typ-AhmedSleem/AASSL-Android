@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "329221637234",
+    "project_id": "aas-for-sl",
+    "storage_bucket": "aas-for-sl.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:329221637234:android:4be5506268e84a11c0aeeb",
+        "android_client_info": {
+          "package_name": "com.typ.aassl"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "329221637234-djkgepbs1qd0m5vsnt8m6o12i3fid324.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.typ.aassl",
+            "certificate_hash": "cfdd5bffbc8fd0c3691cd071010faf692efe4e50"
+          }
+        },
+        {
+          "client_id": "329221637234-h4o2t7dgis5on9qpfemev6hg0iihfihh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA6k2a7KcsEHpojKPXoZEpITQhVC2yXf78"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "329221637234-h4o2t7dgis5on9qpfemev6hg0iihfihh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
