@@ -1,11 +1,11 @@
 package com.typ.aassl.data.models
 
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.google.android.material.progressindicator.CircularProgressIndicator
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.Serializable
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -34,16 +34,14 @@ class Accident(
 //            ).format(Instant.ofEpochMilli(timestamp))
     }
 
-    fun showLocationOnMaps(ctx: Context) {
-        val mapsIntent = Intent(Intent.ACTION_VIEW, Uri.parse("geo:${location.lat},${location.lng}"))
-        mapsIntent.resolveActivity(ctx.packageManager)?.let { ctx.startActivity(mapsIntent) }
-    }
-
     fun markAsRead() {
         isRead = true
     }
 
-    suspend fun downloadVideo() {
+    suspend fun downloadVideo(pBar: CircularProgressIndicator) {
+        withContext(Dispatchers.Main) {
+            pBar.progress += 1
+        }
         TODO("Not yet implemented")
     }
 
@@ -52,7 +50,7 @@ class Accident(
     }
 
     override fun equals(other: Any?): Boolean {
-        if (other == null)return false
+        if (other == null) return false
         if ((other is Accident).not()) return false
         return (other as Accident).timestamp == timestamp
     }

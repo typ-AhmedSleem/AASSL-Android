@@ -1,6 +1,8 @@
 package com.typ.aassl.ui
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -29,6 +31,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.typ.aassl.R
 import com.typ.aassl.data.Accidents
 import com.typ.aassl.data.models.Accident
@@ -39,10 +43,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit
 
 class MainActivity : ComponentActivity() {
 
@@ -59,19 +66,32 @@ class MainActivity : ComponentActivity() {
             GlobalScope.launch(Dispatchers.IO) {
                 if (firstTime) {
                     delay(5.seconds)
-                    firstTime = false
-                }
-                repeat(100) {
                     accidents.add(
                         Accident(
-                            MapLocation(Random.nextDouble(), Random.nextDouble()),
+                            MapLocation(30.033333, 31.233334),
                             "",
                             "",
                             System.currentTimeMillis(),
-                            booleanArrayOf(false, true).random()
+                            false
                         )
                     )
-                    delay(Random.nextInt(0, 10).seconds)
+                    firstTime = false
+                }
+                repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    repeat(10) {
+                        accidents.add(
+                            0,
+                            Accident(
+                                MapLocation(Random.nextDouble(), Random.nextDouble()),
+                                "",
+                                "",
+                                System.currentTimeMillis() - Random.nextLong(5.minutes.toLong(DurationUnit.MILLISECONDS)),
+                                false
+                            )
+                        )
+                        withContext(Dispatchers.Main) { Toast.makeText(this@MainActivity, R.string.new_accident_happened, Toast.LENGTH_SHORT).show() }
+                        delay(Random.nextInt(0, 10).seconds)
+                    }
                 }
             }
         }
@@ -86,7 +106,6 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
     fun MainView() {
-        val ctx = LocalContext.current
         val group = accidents.groupBy { monthOfTimestamp(it.timestamp) }
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -106,12 +125,13 @@ class MainActivity : ComponentActivity() {
                         .padding(20.dp)
                         .clickable {
                             accidents.add(
+                                0,
                                 Accident(
                                     MapLocation(Random.nextDouble(), Random.nextDouble()),
                                     "",
                                     "",
                                     System.currentTimeMillis(),
-                                    booleanArrayOf(false, true).random()
+                                    false
                                 )
                             )
                         }
@@ -172,12 +192,12 @@ class MainActivity : ComponentActivity() {
         newAccidentText: String = "${stringResource(id = R.string.new_accident_at)} ${accident.formattedTimestamp()}",
         oldAccidentText: String = "${stringResource(id = R.string.old_accident_at)} ${accident.formattedTimestamp()}"
     ) {
+        val ctx = LocalContext.current
         val composeScope = currentRecomposeScope
         Box(modifier = Modifier
             .fillMaxWidth()
             .background(color = if (accident.isRead) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.errorContainer)
             .clickable {
-                // TODO: Show accident in AccidentViewerActivity
                 if (accident.isRead.not()) {
                     accident.markAsRead()
                     accidents
@@ -186,8 +206,12 @@ class MainActivity : ComponentActivity() {
                             if (idx == -1) return@let
                             accidents[idx] = accident
                             composeScope.invalidate()
+                            Accidents.save(ctx, accident)
                         }
                 }
+                startActivity(Intent(ctx, AccidentViewerActivity::class.java).apply {
+                    putExtra("accident", accident)
+                })
             }
         ) {
             Column(
@@ -221,7 +245,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun monthOfTimestamp(timestamp: Long): String {
-        return SimpleDateFormat("hh:mm:ss aa", Locale.getDefault()).format(timestamp)
+        return SimpleDateFormat("hh:mm aa", Locale.getDefault()).format(timestamp)
     }
 
 }

@@ -6,4 +6,9 @@
     <string name="new_accident_at">New Accident at</string>
     <string name="lng">Lng:</string>
     <string name="lat">Lat:</string>
+    <string name="accident_details">Accident Details</string>
+    <string name="accident_time">Accident Time</string>
+    <string name="accident_coords">Coordinates</string>
+    <string name="view_location_on_map">View Location on Map</string>
+    <string name="new_accident_happened">New Accident Happened</string>
 </resources>
