@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">AASSL</string>
+    <string name="app_name_long">Accident Assessment System for Saving Lives</string>
+    <string name="empty_msg">There\'s neither new accidents reported to app nor saved past ones.Any new accidents will appear here</string>
+    <string name="old_accident_at">Old Accident at</string>
+    <string name="new_accident_at">New Accident at</string>
+    <string name="lng">Lng:</string>
+    <string name="lat">Lat:</string>
 </resources>

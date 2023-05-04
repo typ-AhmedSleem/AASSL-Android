@@ -3,7 +3,7 @@ package com.typ.aassl.data
 import android.content.Context
 import com.typ.aassl.data.models.Accident
 
-class Accidents {
+object Accidents {
 
     fun getAll(ctx: Context): Array<Accident> {
         return AccidentsDatabase.getInstance(ctx).getAccidentDAO().getAllAccidents()

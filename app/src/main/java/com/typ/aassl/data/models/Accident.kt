@@ -7,8 +7,8 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.io.Serializable
-import java.time.Instant
-import java.time.format.DateTimeFormatter
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 @Entity(tableName = "accidents")
@@ -24,11 +24,15 @@ class Accident(
     var isRead: Boolean = isRead
         private set
 
-    val formattedTimestamp = DateTimeFormatter
-        .ofPattern(
-            "hh:mm aa - dd MM yyyy",
-            Locale.getDefault()
-        ).format(Instant.ofEpochMilli(timestamp))
+    fun formattedTimestamp(): String {
+        return SimpleDateFormat("(dd MMM yyyy hh:mm:ss aa)", Locale.getDefault())
+            .format(Date(timestamp))
+//        return DateTimeFormatter
+//            .ofPattern(
+//                "dd MMM yyyy hh:mm:ss aa",
+//                Locale.getDefault()
+//            ).format(Instant.ofEpochMilli(timestamp))
+    }
 
     fun showLocationOnMaps(ctx: Context) {
         val mapsIntent = Intent(Intent.ACTION_VIEW, Uri.parse("geo:${location.lat},${location.lng}"))
@@ -45,6 +49,12 @@ class Accident(
 
     suspend fun saveAccidentVideo() {
         TODO("Not yet implemented")
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (other == null)return false
+        if ((other is Accident).not()) return false
+        return (other as Accident).timestamp == timestamp
     }
 
 }
