@@ -1,6 +1,7 @@
 package com.typ.aassl.utils
 
 import androidx.room.TypeConverter
+import com.typ.aassl.data.models.CarInfo
 import com.typ.aassl.data.models.MapLocation
 
 class Converters {
@@ -17,5 +18,13 @@ class Converters {
 
     @TypeConverter
     fun serializeLocation(location: MapLocation): String = "${location.lat},${location.lng}"
-    
+
+    @TypeConverter
+    fun saveCarInfo(carInfo: CarInfo): String {
+        return "${carInfo.carId},${carInfo.carModel},${carInfo.carOwner},${carInfo.emergencyContacts[0]},${carInfo.emergencyContacts[1]}"
+    }
+
+    @TypeConverter
+    fun loadCarInfo(rawJson: String): CarInfo = CarInfo.parseCarInfo(rawJson)
+
 }

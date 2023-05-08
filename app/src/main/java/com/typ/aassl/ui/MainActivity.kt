@@ -1,10 +1,16 @@
 package com.typ.aassl.ui
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
+import android.os.Build.VERSION_CODES.TIRAMISU
 import android.os.Bundle
-import android.widget.Toast
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,75 +37,76 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.repeatOnLifecycle
+import com.google.firebase.messaging.FirebaseMessaging
 import com.typ.aassl.R
 import com.typ.aassl.data.Accidents
 import com.typ.aassl.data.models.Accident
-import com.typ.aassl.data.models.MapLocation
+import com.typ.aassl.services.AccidentWatcherService
 import com.typ.aassl.ui.theme.AASSLAndroidTheme
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Locale
-import kotlin.random.Random
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.DurationUnit
 
 class MainActivity : ComponentActivity() {
 
-    private val accidents by lazy {
-        mutableStateListOf<Accident>().apply { addAll(Accidents.getAll(this@MainActivity)) }
-    }
+    private val accidentsReceiver = object : BroadcastReceiver() {
 
-    @OptIn(DelicateCoroutinesApi::class)
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val preview = true
-        var firstTime = true
-        if (preview) {
-            GlobalScope.launch(Dispatchers.IO) {
-                if (firstTime) {
-                    delay(5.seconds)
-                    accidents.add(
-                        Accident(
-                            MapLocation(30.033333, 31.233334),
-                            "",
-                            "",
-                            System.currentTimeMillis(),
-                            false
-                        )
-                    )
-                    firstTime = false
-                }
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    repeat(10) {
-                        accidents.add(
-                            0,
-                            Accident(
-                                MapLocation(Random.nextDouble(), Random.nextDouble()),
-                                "",
-                                "",
-                                System.currentTimeMillis() - Random.nextLong(5.minutes.toLong(DurationUnit.MILLISECONDS)),
-                                false
-                            )
-                        )
-                        withContext(Dispatchers.Main) { Toast.makeText(this@MainActivity, R.string.new_accident_happened, Toast.LENGTH_SHORT).show() }
-                        delay(Random.nextInt(0, 10).seconds)
-                    }
+        override fun onReceive(context: Context?, intent: Intent?) {
+            intent?.let {
+                if (it.action == AccidentWatcherService.ACTION_NEW_ACCIDENT) {
+                    // New accident broadcast
+                    val accident = if (Build.VERSION.SDK_INT >= TIRAMISU) intent.getSerializableExtra("accident", Accident::class.java) as Accident
+                    else intent.getSerializableExtra("accident") as Accident
+                    accidents.add(0, accident)
+                    Log.i("accidentsReceiver", "onNewAccident: $accident")
                 }
             }
+        }
+    }
+
+    private val accidents by lazy {
+        mutableStateListOf<Accident>().apply {
+            addAll(Accidents.getAll(this@MainActivity).sortedArrayWith { first, second -> (second.timestamp - first.timestamp).toInt() })
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        FirebaseMessaging.getInstance().token.addOnSuccessListener {
+            Log.i("AccidentWatcherService", "Token: $it")
         }
         setContent {
             AASSLAndroidTheme {
                 window.statusBarColor = MaterialTheme.colorScheme.background.value.toInt()
                 MainView()
             }
+        }
+    }
+
+    @RequiresApi(TIRAMISU)
+    override fun onStart() {
+        super.onStart()
+        // Refresh accidents list
+        accidents.clear()
+        accidents.addAll(Accidents.getAll(this@MainActivity).sortedArrayWith { first, second -> (second.timestamp - first.timestamp).toInt() })
+        registerReceiver(accidentsReceiver, IntentFilter(AccidentWatcherService.ACTION_NEW_ACCIDENT), RECEIVER_EXPORTED)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        try {
+            unregisterReceiver(accidentsReceiver)
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        try {
+            unregisterReceiver(accidentsReceiver)
+        } catch (e: Throwable) {
+            e.printStackTrace()
         }
     }
 
@@ -123,18 +130,6 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(20.dp)
-                        .clickable {
-                            accidents.add(
-                                0,
-                                Accident(
-                                    MapLocation(Random.nextDouble(), Random.nextDouble()),
-                                    "",
-                                    "",
-                                    System.currentTimeMillis(),
-                                    false
-                                )
-                            )
-                        }
                 )
                 Divider(modifier = Modifier.fillMaxWidth())
                 // Content
@@ -178,7 +173,13 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                             }
-                            items(items = accidentsGroup) { accident -> AccidentItemView(accident) }
+                            items(items = accidentsGroup) { accident ->
+                                AccidentItemView(
+                                    accident = accident,
+                                    newAccidentText = "${accident.carInfo.carOwner} crashed his ${accident.carInfo.carModel}",
+                                    oldAccidentText = "${accident.carInfo.carOwner} crashed his ${accident.carInfo.carModel}"
+                                )
+                            }
                         }
                     }
                 }
@@ -206,12 +207,9 @@ class MainActivity : ComponentActivity() {
                             if (idx == -1) return@let
                             accidents[idx] = accident
                             composeScope.invalidate()
-                            Accidents.save(ctx, accident)
                         }
                 }
-                startActivity(Intent(ctx, AccidentViewerActivity::class.java).apply {
-                    putExtra("accident", accident)
-                })
+                startActivity(Intent(ctx, AccidentViewerActivity::class.java).apply { putExtra("accident", accident) })
             }
         ) {
             Column(
@@ -233,10 +231,17 @@ class MainActivity : ComponentActivity() {
                     color = if (accident.isRead) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onErrorContainer
                 )
                 Text(
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                     textAlign = TextAlign.Start,
                     modifier = Modifier.fillMaxWidth(),
                     color = if (accident.isRead) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onErrorContainer,
+                    text = accident.formattedTimestamp()
+                )
+                Text(
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.fillMaxWidth(),
+                    color = if (accident.isRead) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onErrorContainer,
                     text = "${stringResource(R.string.lat)} ${accident.location.lat} , ${stringResource(R.string.lng)} ${accident.location.lng}"
                 )
             }

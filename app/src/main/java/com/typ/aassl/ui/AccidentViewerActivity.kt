@@ -18,6 +18,7 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.textview.MaterialTextView
 import com.typ.aassl.R
+import com.typ.aassl.data.Accidents
 import com.typ.aassl.data.models.Accident
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -45,20 +46,35 @@ class AccidentViewerActivity : AppCompatActivity(R.layout.activity_accident_view
         // Init runtime
         accident = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) intent.getSerializableExtra("accident", Accident::class.java) as Accident
         else intent.getSerializableExtra("accident") as Accident
+        try {
+            Accidents.update(this, accident)
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
         // Init UI
         findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
-        findViewById<MaterialTextView>(R.id.tv_accident_time).text = accident.formattedTimestamp()
+        findViewById<MaterialTextView>(R.id.tv_accident_time).text = accident.formattedTimestamp("hh:mm:ss a\ndd MMM yyyy")
         findViewById<MaterialButton>(R.id.btn_show_loc).setOnClickListener {
             with(accident) {
                 val uri = Uri.parse("geo:${location.lat},${location.lng}")
                 Intent(Intent.ACTION_VIEW, uri).apply {
                     resolveActivity(packageManager)?.let {
                         startActivity(this)
-                    } ?: Toast.makeText(this@AccidentViewerActivity, "تطبيق الخرائط غير مثبت", Toast.LENGTH_SHORT).show()
+                    } ?: Toast.makeText(this@AccidentViewerActivity, R.string.maps_not_installed, Toast.LENGTH_SHORT).show()
                 }
             }
         }
         findViewById<MaterialTextView>(R.id.tv_accident_loc).text = "${getString(R.string.lat)} ${accident.location.lat}\n${getString(R.string.lng)} ${accident.location.lng}"
+        with(accident.carInfo) {
+            findViewById<MaterialTextView>(R.id.tv_car_id).text = this.carId
+            findViewById<MaterialTextView>(R.id.tv_car_model).text = this.carModel
+            findViewById<MaterialTextView>(R.id.tv_car_owner).text = this.carOwner
+            findViewById<MaterialTextView>(R.id.tv_emergency_contacts).text = emergencyContacts.let {
+                var contacts = ""
+                it.forEach { contact -> contacts += "$contact\n" }
+                contacts
+            }
+        }
         val videoView = findViewById<VideoView>(R.id.video_view)
         videoView.visibility = View.INVISIBLE
         videoView.setMediaController(MediaController(this, false))
@@ -66,7 +82,7 @@ class AccidentViewerActivity : AppCompatActivity(R.layout.activity_accident_view
         val progressBar = findViewById<CircularProgressIndicator>(R.id.progress_video_downloader)
         // Load video then play it
         GlobalScope.launch(Dispatchers.IO) {
-            var totalBytes: Int
+            val totalBytes: Int
             var downloadedBytes = 0
             var downloadPercentage: Float
             // Download the video file then cache it

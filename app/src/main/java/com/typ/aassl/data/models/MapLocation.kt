@@ -5,4 +5,6 @@ import java.io.Serializable
 data class MapLocation(
     val lat: Double,
     val lng: Double
-) : Serializable
+) : Serializable {
+    override fun toString(): String = "%.3f,%.3f".format(lat, lng)
+}
