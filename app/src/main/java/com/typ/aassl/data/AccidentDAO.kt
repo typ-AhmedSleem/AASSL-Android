@@ -2,6 +2,7 @@ package com.typ.aassl.data
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.typ.aassl.data.models.Accident
@@ -15,7 +16,7 @@ interface AccidentDAO {
     @Query("SELECT DISTINCT * FROM accidents ORDER BY timestamp DESC")
     fun getAllAccidents(): Array<Accident>
 
-    @Update(entity = Accident::class)
+    @Update(entity = Accident::class, onConflict = OnConflictStrategy.REPLACE)
     fun updateAccident(accident: Accident)
 
 }

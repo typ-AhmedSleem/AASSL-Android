@@ -5,6 +5,8 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.firebase.FirebaseApp
@@ -32,6 +34,12 @@ class AccidentWatcherService : FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
+        val notifyManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        // Check if notifications are enabled
+        if (!notifyManager.areNotificationsEnabled()) {
+            // Ask for permission
+            openAppSettings()
+        }
         // Post notification to user with new accident
         Log.i("AccidentWatcherService", "onMessageReceived: Sender= ${message.from} | ${message.data}")
         val accident = with(message.data) {
@@ -64,7 +72,6 @@ class AccidentWatcherService : FirebaseMessagingService() {
                     PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
             ).build()
-        val notifyManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notifyManager.createNotificationChannel(NotificationChannel("accidents", "Accidents", NotificationManager.IMPORTANCE_HIGH))
         notifyManager.notify(Random.nextInt(20), notification)
         // Send a broadcast to UI notifying it with new accident (if app is running in foreground)
@@ -86,6 +93,12 @@ class AccidentWatcherService : FirebaseMessagingService() {
                 else Log.e("AccidentWatcherService", "Failed to refresh token.")
             }
         }
+    }
+
+    private fun openAppSettings() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        intent.data = Uri.fromParts("package", packageName, null)
+        startActivity(intent)
     }
 
     companion object {

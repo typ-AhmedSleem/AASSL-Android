@@ -31,7 +31,10 @@ class Accident(
     var id: Int = Random.nextInt()
 
     @Ignore
-    val accidentVideoFile: File = File("${timestamp}.mp4")
+    val accidentVideoRef = this.videoStorageUrl
+
+    fun getVideoCacheFile(cacheDir: File) = File(cacheDir, accidentVideoRef)
+
 
     fun formattedTimestamp(pattern: String = "dd MMM yyyy hh:mm:ss aa"): String {
         return SimpleDateFormat(pattern, Locale.getDefault())
@@ -39,7 +42,7 @@ class Accident(
     }
 
     fun markAsRead() {
-        isRead = true
+        if (!isRead) isRead = true
     }
 
     suspend fun downloadVideo(pBar: CircularProgressIndicator) {
@@ -69,7 +72,7 @@ class Accident(
     }
 
     override fun toString(): String {
-        return "Accident(location=$location,\nvideoStorageUrl='$videoStorageUrl',\ntimestamp=$timestamp,\ncarInfo=$carInfo,\nisRead=$isRead,\nid=$id,\naccidentVideoFile=${accidentVideoFile.path})"
+        return "Accident(location=$location,\nvideoStorageUrl='$videoStorageUrl',\ntimestamp=$timestamp,\ncarInfo=$carInfo,\nisRead=$isRead,\nid=$id)"
     }
 
 
@@ -79,15 +82,15 @@ class Accident(
         const val KEY_LNG = "lng"
         const val KEY_VIDEO_STORAGE_PATH = "video"
         const val KEY_TIMESTAMP = "timestamp"
-    }
 
-    fun randomCarInfo(): CarInfo {
-        return CarInfo(
-            carId = Random.nextInt(1, 9999).toString(),
-            carModel = arrayOf("Mazda RX7", "Toyota Supra", "Nissan GTR").random(),
-            carOwner = arrayOf("Vin Diesel", "Paul Walker", "John Cina").random(),
-            emergencyContacts = arrayOf("01029787124", "01553106473")
-        )
+        fun randomCarInfo(): CarInfo {
+            return CarInfo(
+                carId = Random.nextInt(1, 9999).toString(),
+                carModel = arrayOf("Mazda RX7", "Toyota Supra", "Nissan GTR").random(),
+                carOwner = arrayOf("Vin Diesel", "Paul Walker", "John Cina").random(),
+                emergencyContacts = arrayOf("01029787124", "01553106473")
+            )
+        }
     }
 
 }

@@ -1,15 +1,21 @@
 package com.typ.aassl.ui
 
+import android.Manifest
+import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION_CODES.TIRAMISU
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -37,13 +43,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.google.firebase.messaging.FirebaseMessaging
 import com.typ.aassl.R
 import com.typ.aassl.data.Accidents
 import com.typ.aassl.data.models.Accident
 import com.typ.aassl.services.AccidentWatcherService
 import com.typ.aassl.ui.theme.AASSLAndroidTheme
-import kotlinx.coroutines.DelicateCoroutinesApi
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -54,11 +60,13 @@ class MainActivity : ComponentActivity() {
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let {
                 if (it.action == AccidentWatcherService.ACTION_NEW_ACCIDENT) {
-                    // New accident broadcast
-                    val accident = if (Build.VERSION.SDK_INT >= TIRAMISU) intent.getSerializableExtra("accident", Accident::class.java) as Accident
-                    else intent.getSerializableExtra("accident") as Accident
-                    accidents.add(0, accident)
-                    Log.i("accidentsReceiver", "onNewAccident: $accident")
+                    try {// New accident broadcast
+                        val accident = if (Build.VERSION.SDK_INT >= TIRAMISU) intent.getSerializableExtra("accident", Accident::class.java) as Accident
+                        else intent.getSerializableExtra("accident") as Accident
+                        accidents.add(0, accident)
+                        Log.i("MainActivity::AccidentsReceiver", "onNewAccident: $accident")
+                    } catch (_: Exception) {
+                    }
                 }
             }
         }
@@ -73,7 +81,24 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseMessaging.getInstance().token.addOnSuccessListener {
-            Log.i("AccidentWatcherService", "Token: $it")
+            Log.i("MainActivity", "Token: $it")
+        }
+        val notifyManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        // Check if notifications are enabled
+        if (!notifyManager.areNotificationsEnabled()) {
+            // Ask for permission
+            if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED) {
+                // Request notification permission
+                val permissionLauncher = registerForActivityResult(
+                    ActivityResultContracts.RequestPermission()
+                ) {
+                    // todo: continue from here
+                }
+            }
+//            openAppSettings()
         }
         setContent {
             AASSLAndroidTheme {
@@ -81,6 +106,12 @@ class MainActivity : ComponentActivity() {
                 MainView()
             }
         }
+    }
+
+    private fun openAppSettings() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        intent.data = Uri.fromParts("package", packageName, null)
+        startActivity(intent)
     }
 
     @RequiresApi(TIRAMISU)
@@ -200,7 +231,6 @@ class MainActivity : ComponentActivity() {
             .background(color = if (accident.isRead) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.errorContainer)
             .clickable {
                 if (accident.isRead.not()) {
-                    accident.markAsRead()
                     accidents
                         .indexOf(accident)
                         .let { idx ->

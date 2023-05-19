@@ -7,6 +7,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.MediaController
 import android.widget.Toast
@@ -17,21 +18,12 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.textview.MaterialTextView
+import com.google.firebase.storage.FirebaseStorage
 import com.typ.aassl.R
 import com.typ.aassl.data.Accidents
 import com.typ.aassl.data.models.Accident
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.InputStream
-import kotlin.random.Random
-import kotlin.time.Duration.Companion.milliseconds
 
 class AccidentViewerActivity : AppCompatActivity(R.layout.activity_accident_viewer) {
 
@@ -47,6 +39,7 @@ class AccidentViewerActivity : AppCompatActivity(R.layout.activity_accident_view
         accident = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) intent.getSerializableExtra("accident", Accident::class.java) as Accident
         else intent.getSerializableExtra("accident") as Accident
         try {
+            accident.markAsRead()
             Accidents.update(this, accident)
         } catch (e: Throwable) {
             e.printStackTrace()
@@ -81,54 +74,68 @@ class AccidentViewerActivity : AppCompatActivity(R.layout.activity_accident_view
         val tvProgress = findViewById<MaterialTextView>(R.id.tv_progress_done)
         val progressBar = findViewById<CircularProgressIndicator>(R.id.progress_video_downloader)
         // Load video then play it
-        GlobalScope.launch(Dispatchers.IO) {
-            val totalBytes: Int
-            var downloadedBytes = 0
-            var downloadPercentage: Float
-            // Download the video file then cache it
-            val videoFile = File(cacheDir, "${accident.timestamp}.mp4")
-            var ins: InputStream? = null
-            var ots: FileOutputStream? = null
-            try {
-                ins = assets.open("video.mp4")
-                ots = FileOutputStream(videoFile)
-                totalBytes = ins.available()
-                // Copy video file from ins to outs
-                var read: Int
-                val buffer = ByteArray(1024)
-                while ((ins.read(buffer).also { read = it }) != -1) {
-                    ots.write(buffer, 0, read)
-                    downloadedBytes += 1024
-                    withContext(Dispatchers.Main) {
-                        downloadPercentage = ((downloadedBytes / totalBytes.toFloat()) * 100).coerceAtMost(100f)
-                        progressBar.progress = downloadPercentage.toInt()
-                        tvProgress.text = "%.1f".format(downloadPercentage) + " %"
-                    }
-                    delay(Random.nextInt(0, 5).milliseconds)
+        progressBar.show()
+        tvProgress.visibility = View.VISIBLE
+        videoView.visibility = View.INVISIBLE
+        val cacheVideoFile = accident.getVideoCacheFile(cacheDir)
+        Log.i("AccidentViewingActivity", "Targeting video at Storage: [%s] | at Local: [%s]".format(accident.accidentVideoRef, cacheVideoFile.path))
+        val videoCached = runCatching { cacheVideoFile.exists() }.getOrDefault(false)
+        if (videoCached) {
+            // [APPROACH-1] Check whether video exists in LocalStorage or not
+            Log.i("AccidentViewingActivity", "Accident video was found in cache. Playing it...")
+            // Play accident video
+            playAccidentVideo(
+                cacheVideoFile,
+                progressBar,
+                tvProgress,
+                videoView
+            )
+        } else {
+            // [APPROACH-2] Locate video in FirebaseStorage, download it then view it in VideoPlayer
+            val storage = FirebaseStorage.getInstance()
+            storage.getReference(accident.accidentVideoRef).getFile(cacheVideoFile)
+                .addOnProgressListener {
+                    val downloadPercentage = runCatching { ((it.bytesTransferred / it.totalByteCount.toFloat()) * 100).coerceAtMost(100f) }.getOrDefault(0f)
+                    progressBar.progress = downloadPercentage.toInt()
+                    tvProgress.text = "%.1f".format(downloadPercentage) + " %"
+                }.addOnFailureListener {
+                    progressBar.hide()
+                    tvProgress.text = "Error downloading Accident Video"
+                    Toast.makeText(this@AccidentViewerActivity, "Error downloading video or not it's not available", Toast.LENGTH_SHORT).show()
+                    Log.e("AccidentViewingActivity", "Error downloading accident video. Reason=[%s]".format(it))
+                    it.printStackTrace()
+                }.addOnSuccessListener {
+                    Log.i("AccidentViewingActivity", "Video downloaded to cache. Playing it...")
+                    // Play accident video
+                    playAccidentVideo(
+                        cacheVideoFile,
+                        progressBar,
+                        tvProgress,
+                        videoView
+                    )
                 }
-            } catch (e: IOException) {
-                e.printStackTrace()
-            } finally {
-                try {
-                    ins?.close()
-                } catch (_: IOException) {
-                }
-                try {
-                    ots?.flush()
-                    ots?.close()
-                } catch (_: IOException) {
-                }
-            }
-            delay(500L)
-            // Prepare VideoView then play the video
-            withContext(Dispatchers.Main) {
-                progressBar.hide()
-                videoView.visibility = View.VISIBLE
-                tvProgress.visibility = View.INVISIBLE
-                videoView.setVideoURI(Uri.fromFile(videoFile))
-                videoView.start()
-            }
         }
     }
 
+    private fun playAccidentVideo(
+        cacheVideoFile: File,
+        progressBar: CircularProgressIndicator,
+        tvProgress: MaterialTextView,
+        videoView: VideoView
+    ) {
+        // Check if video file is a DIR
+        if (cacheVideoFile.isDirectory) {
+            progressBar.hide()
+            tvProgress.visibility = View.VISIBLE
+            videoView.visibility = View.INVISIBLE
+            tvProgress.text = "Can't play accident video"
+            return
+        }
+        progressBar.hide()
+        tvProgress.visibility = View.INVISIBLE
+
+        videoView.visibility = View.VISIBLE
+        videoView.setVideoURI(Uri.fromFile(cacheVideoFile))
+        videoView.start()
+    }
 }
