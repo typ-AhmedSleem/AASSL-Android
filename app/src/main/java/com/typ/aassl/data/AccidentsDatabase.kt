@@ -4,15 +4,19 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import com.typ.aassl.data.models.Accident
-import com.typ.aassl.data.models.AccidentDAO
+import com.typ.aassl.utils.Converters
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.internal.synchronized
 
 @Database(
-    version = 1,
+    version = 2,
     entities = [Accident::class],
-    exportSchema = false
+    exportSchema = false,
+)
+@TypeConverters(
+    Converters::class
 )
 abstract class AccidentsDatabase : RoomDatabase() {
 
@@ -32,7 +36,10 @@ abstract class AccidentsDatabase : RoomDatabase() {
                             ctx,
                             AccidentsDatabase::class.java,
                             "AccidentsDatabase"
-                        ).allowMainThreadQueries().build()
+                        )
+                            .allowMainThreadQueries()
+                            .fallbackToDestructiveMigration()
+                            .build()
                     }
                 }
             }
