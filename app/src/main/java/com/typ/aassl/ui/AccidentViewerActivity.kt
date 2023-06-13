@@ -82,7 +82,7 @@ class AccidentViewerActivity : AppCompatActivity(R.layout.activity_accident_view
         val videoCached = runCatching { cacheVideoFile.exists() }.getOrDefault(false)
         if (videoCached) {
             // [APPROACH-1] Check whether video exists in LocalStorage or not
-            Log.i("AccidentViewingActivity", "Accident video was found in cache. Playing it...")
+            Log.i("AccidentViewingActivity", "Accident video was found in cache at path: [%s].Playing it...".format(cacheVideoFile.path))
             // Play accident video
             playAccidentVideo(
                 cacheVideoFile,
@@ -105,7 +105,7 @@ class AccidentViewerActivity : AppCompatActivity(R.layout.activity_accident_view
                     Log.e("AccidentViewingActivity", "Error downloading accident video. Reason=[%s]".format(it))
                     it.printStackTrace()
                 }.addOnSuccessListener {
-                    Log.i("AccidentViewingActivity", "Video downloaded to cache. Playing it...")
+                    Log.i("AccidentViewingActivity", "Video downloaded to cache at path [%s] .Playing it...".format(cacheVideoFile.path))
                     // Play accident video
                     playAccidentVideo(
                         cacheVideoFile,
@@ -117,6 +117,7 @@ class AccidentViewerActivity : AppCompatActivity(R.layout.activity_accident_view
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun playAccidentVideo(
         cacheVideoFile: File,
         progressBar: CircularProgressIndicator,
@@ -137,5 +138,6 @@ class AccidentViewerActivity : AppCompatActivity(R.layout.activity_accident_view
         videoView.visibility = View.VISIBLE
         videoView.setVideoURI(Uri.fromFile(cacheVideoFile))
         videoView.start()
+        Log.i("AccidentViewingActivity", "playAccidentVideo: %s".format(cacheVideoFile.path))
     }
 }

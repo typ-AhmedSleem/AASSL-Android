@@ -1,7 +1,6 @@
 package com.typ.aassl.ui
 
 import android.Manifest
-import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -13,10 +12,11 @@ import android.os.Build.VERSION_CODES.TIRAMISU
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -33,8 +34,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.currentRecomposeScope
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -50,6 +56,7 @@ import com.typ.aassl.data.Accidents
 import com.typ.aassl.data.models.Accident
 import com.typ.aassl.services.AccidentWatcherService
 import com.typ.aassl.ui.theme.AASSLAndroidTheme
+import kotlinx.coroutines.DelicateCoroutinesApi
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -78,32 +85,47 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseMessaging.getInstance().token.addOnSuccessListener {
             Log.i("MainActivity", "Token: $it")
         }
-        val notifyManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        // Check if notifications are enabled
-        if (!notifyManager.areNotificationsEnabled()) {
-            // Ask for permission
-            if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED) {
-                // Request notification permission
-                val permissionLauncher = registerForActivityResult(
-                    ActivityResultContracts.RequestPermission()
-                ) {
-                    // todo: continue from here
-                }
-            }
-//            openAppSettings()
-        }
+
         setContent {
             AASSLAndroidTheme {
-                window.statusBarColor = MaterialTheme.colorScheme.background.value.toInt()
+
+                // Get notifications permission state
+                var hasNotificationsPermission by remember {
+                    mutableStateOf(
+                        if (Build.VERSION.SDK_INT >= TIRAMISU) {
+                            ContextCompat.checkSelfPermission(
+                                this,
+                                Manifest.permission.POST_NOTIFICATIONS
+                            ) == PackageManager.PERMISSION_GRANTED
+                        } else true
+                    )
+                }
+
+                val permLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestPermission(),
+                    onResult = { isGranted ->
+                        hasNotificationsPermission = isGranted
+                        if (isGranted) Toast.makeText(this, "Notifications Permission was granted.", Toast.LENGTH_SHORT).show()
+                        else Toast.makeText(this, "Notifications are disabled\nEnable it from app settings", Toast.LENGTH_SHORT).show()
+                    }
+                )
+
+                // Request permission (if not granted)
+                if (!hasNotificationsPermission and (Build.VERSION.SDK_INT >= TIRAMISU)) {
+                    SideEffect {
+                        permLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }
+
+                // MainView
                 MainView()
+
             }
         }
     }
@@ -114,7 +136,6 @@ class MainActivity : ComponentActivity() {
         startActivity(intent)
     }
 
-    @RequiresApi(TIRAMISU)
     override fun onStart() {
         super.onStart()
         // Refresh accidents list
@@ -144,25 +165,33 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
     fun MainView() {
-        val group = accidents.groupBy { monthOfTimestamp(it.timestamp) }
+        val group = accidents.groupBy { timeOfDay(it.timestamp) }
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background,
+            color = MaterialTheme.colorScheme.surface,
         ) {
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
                 // Header
-                Text(
-                    text = stringResource(id = R.string.app_name_long),
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 15.sp,
+                Box(
+                    contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp)
-                )
-                Divider(modifier = Modifier.fillMaxWidth())
+                        .height(50.dp)
+                        .background(MaterialTheme.colorScheme.primary)
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.app_name_long),
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontSize = 15.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp)
+                    )
+                }
                 // Content
                 if (accidents.isEmpty()) {
                     // Show empty text
@@ -172,35 +201,33 @@ class MainActivity : ComponentActivity() {
                     ) {
                         Text(
                             fontSize = 15.sp,
-                            text = stringResource(id = R.string.empty_msg),
-                            textAlign = TextAlign.Justify,
-                            fontWeight = FontWeight.Light,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(20.dp),
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Light,
+                            text = stringResource(id = R.string.empty_msg),
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 } else {
                     // Show accidents list
                     LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(bottom = 10.dp)
+                        modifier = Modifier.fillMaxSize()
                     ) {
                         group.forEach { (month, accidentsGroup) ->
                             stickyHeader(key = month) {
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                                        .background(MaterialTheme.colorScheme.primaryContainer)
                                 ) {
                                     Text(
                                         text = month,
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(10.dp),
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
                                 }
                             }
@@ -228,7 +255,7 @@ class MainActivity : ComponentActivity() {
         val composeScope = currentRecomposeScope
         Box(modifier = Modifier
             .fillMaxWidth()
-            .background(color = if (accident.isRead) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.errorContainer)
+            .background(color = if (accident.isRead) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.errorContainer)
             .clickable {
                 if (accident.isRead.not()) {
                     accidents
@@ -258,7 +285,7 @@ class MainActivity : ComponentActivity() {
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.fillMaxWidth(),
                     text = if (accident.isRead) oldAccidentText else newAccidentText,
-                    color = if (accident.isRead) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onErrorContainer
+                    color = if (accident.isRead) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer
                 )
                 Text(
                     fontSize = 13.sp,
@@ -279,7 +306,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun monthOfTimestamp(timestamp: Long): String {
+    private fun timeOfDay(timestamp: Long): String {
         return SimpleDateFormat("hh:mm aa", Locale.getDefault()).format(timestamp)
     }
 

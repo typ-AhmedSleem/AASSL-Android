@@ -3,6 +3,6 @@
 
     <style name="Theme.AASSL" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="android:statusBarColor">@color/color_surface</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>

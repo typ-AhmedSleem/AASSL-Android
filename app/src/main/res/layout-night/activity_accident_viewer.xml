@@ -20,10 +20,10 @@
             android:background="@color/color_surface"
             android:elevation="2dp"
             app:navigationIcon="@drawable/ic_arrow_back"
-            app:navigationIconTint="@color/material_dynamic_primary50"
+            app:navigationIconTint="@color/material_dynamic_primary80"
             app:title="@string/accident_details"
             app:titleCentered="true"
-            app:titleTextColor="@color/material_dynamic_primary50" />
+            app:titleTextColor="@color/material_dynamic_primary80" />
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -46,7 +46,7 @@
                 android:max="100"
                 android:min="0"
                 android:progress="0"
-                app:indicatorColor="@color/material_dynamic_primary50"
+                app:indicatorColor="@color/material_dynamic_primary80"
                 app:indicatorDirectionCircular="clockwise"
                 app:indicatorSize="80dp"
                 app:trackColor="@color/material_dynamic_primary99"
@@ -59,7 +59,7 @@
                 android:layout_centerInParent="true"
                 android:maxLines="1"
                 android:text="---%"
-                android:textColor="@color/material_dynamic_primary50"
+                android:textColor="@color/material_dynamic_primary80"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 app:fontFamily="monospace" />
@@ -74,7 +74,7 @@
             android:text="@string/time_and_location"
             android:textAlignment="center"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
-            android:textColor="@color/material_dynamic_secondary30"
+            android:textColor="@color/material_dynamic_secondary70"
             android:textSize="13sp" />
 
         <com.google.android.material.divider.MaterialDivider
@@ -96,7 +96,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:tint="@color/material_dynamic_secondary30"
+                app:tint="@color/material_dynamic_secondary70"
                 tools:ignore="HardcodedText" />
 
             <com.google.android.material.textview.MaterialTextView
@@ -108,7 +108,7 @@
                 android:text="@string/accident_time"
                 android:textAlignment="viewStart"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                android:textColor="@color/material_dynamic_secondary30"
+                android:textColor="@color/material_dynamic_secondary70"
                 android:textSize="14sp"
                 app:layout_constraintBottom_toBottomOf="@id/ic1"
                 app:layout_constraintStart_toEndOf="@id/ic1"
@@ -125,7 +125,7 @@
                 android:text="10:38:42 PM\n04 Mar 2023"
                 android:textAlignment="viewEnd"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                android:textColor="@color/material_dynamic_primary50"
+                android:textColor="@color/material_dynamic_primary80"
                 android:textSize="15sp"
                 app:layout_constraintBottom_toBottomOf="@id/ic1"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -156,7 +156,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:tint="@color/material_dynamic_secondary30"
+                app:tint="@color/material_dynamic_secondary70"
                 tools:ignore="HardcodedText" />
 
             <com.google.android.material.textview.MaterialTextView
@@ -168,7 +168,7 @@
                 android:text="@string/accident_coords"
                 android:textAlignment="viewStart"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                android:textColor="@color/material_dynamic_secondary30"
+                android:textColor="@color/material_dynamic_secondary70"
                 android:textSize="14sp"
                 app:layout_constraintBottom_toBottomOf="@id/ic2"
                 app:layout_constraintStart_toEndOf="@id/ic2"
@@ -186,7 +186,7 @@
                 android:maxLines="2"
                 android:text="Lat: 25.0245\nLng: 31.1878"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                android:textColor="@color/material_dynamic_primary50"
+                android:textColor="@color/material_dynamic_primary80"
                 android:textSize="15sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -204,7 +204,7 @@
             android:layout_marginTop="0dp"
             android:layout_marginEnd="20dp"
             android:text="@string/view_location_on_map"
-            app:backgroundTint="@color/material_dynamic_primary50"
+            app:backgroundTint="@color/material_dynamic_primary80"
             app:layout_constraintTop_toBottomOf="@id/div2" />
 
         <com.google.android.material.divider.MaterialDivider
@@ -222,7 +222,7 @@
             android:text="@string/car_info"
             android:textAlignment="center"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
-            android:textColor="@color/material_dynamic_secondary30"
+            android:textColor="@color/material_dynamic_secondary70"
             android:textSize="13sp" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -239,7 +239,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:tint="@color/material_dynamic_secondary30"
+                app:tint="@color/material_dynamic_secondary70"
                 tools:ignore="HardcodedText" />
 
             <com.google.android.material.textview.MaterialTextView
@@ -251,7 +251,7 @@
                 android:text="@string/car_id"
                 android:textAlignment="viewStart"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                android:textColor="@color/material_dynamic_secondary30"
+                android:textColor="@color/material_dynamic_secondary70"
                 android:textSize="14sp"
                 app:layout_constraintBottom_toBottomOf="@id/ic3"
                 app:layout_constraintStart_toEndOf="@id/ic3"
@@ -267,7 +267,7 @@
                 android:text="{CAR_ID}"
                 android:textAlignment="viewEnd"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                android:textColor="@color/material_dynamic_primary50"
+                android:textColor="@color/material_dynamic_primary80"
                 android:textSize="15sp"
                 app:layout_constraintBottom_toBottomOf="@id/ic3"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -297,7 +297,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:tint="@color/material_dynamic_secondary30"
+                app:tint="@color/material_dynamic_secondary70"
                 tools:ignore="HardcodedText" />
 
             <com.google.android.material.textview.MaterialTextView
@@ -309,7 +309,7 @@
                 android:text="@string/car_model"
                 android:textAlignment="viewStart"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                android:textColor="@color/material_dynamic_secondary30"
+                android:textColor="@color/material_dynamic_secondary70"
                 android:textSize="14sp"
                 app:layout_constraintBottom_toBottomOf="@id/ic4"
                 app:layout_constraintStart_toEndOf="@id/ic4"
@@ -325,7 +325,7 @@
                 android:text="{CAR_MODEL}"
                 android:textAlignment="viewEnd"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                android:textColor="@color/material_dynamic_primary50"
+                android:textColor="@color/material_dynamic_primary80"
                 android:textSize="15sp"
                 app:layout_constraintBottom_toBottomOf="@id/ic4"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -355,7 +355,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:tint="@color/material_dynamic_secondary30"
+                app:tint="@color/material_dynamic_secondary70"
                 tools:ignore="HardcodedText" />
 
             <com.google.android.material.textview.MaterialTextView
@@ -367,7 +367,7 @@
                 android:text="@string/car_owner"
                 android:textAlignment="viewStart"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                android:textColor="@color/material_dynamic_secondary30"
+                android:textColor="@color/material_dynamic_secondary70"
                 android:textSize="14sp"
                 app:layout_constraintBottom_toBottomOf="@id/ic5"
                 app:layout_constraintStart_toEndOf="@id/ic5"
@@ -383,7 +383,7 @@
                 android:text="{CAR_OWNER}"
                 android:textAlignment="viewEnd"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                android:textColor="@color/material_dynamic_primary50"
+                android:textColor="@color/material_dynamic_primary80"
                 android:textSize="15sp"
                 app:layout_constraintBottom_toBottomOf="@id/ic5"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -413,7 +413,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:tint="@color/material_dynamic_secondary30"
+                app:tint="@color/material_dynamic_secondary70"
                 tools:ignore="HardcodedText" />
 
             <com.google.android.material.textview.MaterialTextView
@@ -426,7 +426,7 @@
                 android:text="@string/emergency_contacts"
                 android:textAlignment="viewStart"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                android:textColor="@color/material_dynamic_secondary30"
+                android:textColor="@color/material_dynamic_secondary70"
                 android:textSize="14sp"
                 app:layout_constraintBottom_toBottomOf="@id/ic6"
                 app:layout_constraintStart_toEndOf="@id/ic6"
@@ -443,7 +443,7 @@
                 android:maxLines="2"
                 android:textAlignment="viewEnd"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                android:textColor="@color/material_dynamic_primary50"
+                android:textColor="@color/material_dynamic_primary80"
                 android:textSize="15sp"
                 app:layout_constraintBottom_toBottomOf="@id/ic6"
                 app:layout_constraintEnd_toEndOf="parent"
