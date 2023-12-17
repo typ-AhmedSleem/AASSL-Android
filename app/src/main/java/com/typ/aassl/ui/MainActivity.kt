@@ -25,11 +25,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DividerDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -47,6 +53,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -170,76 +178,90 @@ class MainActivity : ComponentActivity() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.surface,
         ) {
-            Column(
+            Box(
                 modifier = Modifier.fillMaxSize()
             ) {
-                // Header
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                        .background(MaterialTheme.colorScheme.primary)
+                Column(
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    Text(
-                        text = stringResource(id = R.string.app_name_long),
-                        textAlign = TextAlign.Center,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontSize = 15.sp,
+                    // Header
+                    Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp)
-                    )
-                }
-                // Content
-                if (accidents.isEmpty()) {
-                    // Show empty text
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                            .height(50.dp)
+                            .background(MaterialTheme.colorScheme.primary)
                     ) {
                         Text(
+                            text = stringResource(id = R.string.app_name_long),
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             fontSize = 15.sp,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(20.dp),
-                            textAlign = TextAlign.Center,
-                            fontWeight = FontWeight.Light,
-                            text = stringResource(id = R.string.empty_msg),
-                            color = MaterialTheme.colorScheme.onSurface
+                                .padding(10.dp)
                         )
                     }
-                } else {
-                    // Show accidents list
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        group.forEach { (month, accidentsGroup) ->
-                            stickyHeader(key = month) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(MaterialTheme.colorScheme.primaryContainer)
-                                ) {
-                                    Text(
-                                        text = month,
+                    // Content
+                    if (accidents.isEmpty()) {
+                        // Show empty text
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                fontSize = 15.sp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp),
+                                textAlign = TextAlign.Center,
+                                fontWeight = FontWeight.Light,
+                                text = stringResource(id = R.string.empty_msg),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    } else {
+                        // Show accidents list
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            group.forEach { (month, accidentsGroup) ->
+                                stickyHeader(key = month) {
+                                    Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(10.dp),
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                            .background(MaterialTheme.colorScheme.primaryContainer)
+                                    ) {
+                                        Text(
+                                            text = month,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(10.dp),
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                    }
+                                }
+                                items(items = accidentsGroup) { accident ->
+                                    AccidentItemView(
+                                        accident = accident,
+                                        newAccidentText = "${accident.carInfo.carOwner} crashed his ${accident.carInfo.carModel}",
+                                        oldAccidentText = "${accident.carInfo.carOwner} crashed his ${accident.carInfo.carModel}"
                                     )
                                 }
                             }
-                            items(items = accidentsGroup) { accident ->
-                                AccidentItemView(
-                                    accident = accident,
-                                    newAccidentText = "${accident.carInfo.carOwner} crashed his ${accident.carInfo.carModel}",
-                                    oldAccidentText = "${accident.carInfo.carOwner} crashed his ${accident.carInfo.carModel}"
-                                )
-                            }
                         }
                     }
+                }
+                FloatingActionButton(
+                    modifier = Modifier.size(65.dp)
+                        .offset(x = (-25).dp, y= (-25).dp)
+                        .align(Alignment.BottomEnd),
+                    onClick = {
+                        // Report new accident manually
+                        ReportAccidentManuallyBottomSheet(this@MainActivity).show()
+                    }) {
+                    Icon(imageVector = Icons.Filled.Add, contentDescription = "")
                 }
             }
         }
@@ -308,6 +330,12 @@ class MainActivity : ComponentActivity() {
 
     private fun timeOfDay(timestamp: Long): String {
         return SimpleDateFormat("hh:mm aa", Locale.getDefault()).format(timestamp)
+    }
+
+    @Preview(name = "Home", wallpaper = Wallpapers.GREEN_DOMINATED_EXAMPLE)
+    @Composable
+    fun PreviewHomeScreen() {
+        MainView()
     }
 
 }

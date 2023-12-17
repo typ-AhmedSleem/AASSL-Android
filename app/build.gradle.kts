@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.typ.aassl"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.typ.aassl"
@@ -51,6 +51,7 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    buildToolsVersion = "34.0.0"
 }
 
 dependencies {

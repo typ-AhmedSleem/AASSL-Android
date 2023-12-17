@@ -18,4 +18,6 @@
     <string name="car_owner">Car Owner</string>
     <string name="emergency_contacts">Emergency Contacts</string>
     <string name="maps_not_installed">Maps app isn\'t installed</string>
+    <string name="title_activity_main2">MainActivity2</string>
+    <string name="add_accident_manually">Report Accident Manually</string>
 </resources>
